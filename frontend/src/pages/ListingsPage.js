@@ -4,6 +4,7 @@ import './ListingsPage.css';
 import PropertyFilters from '../components/PropertyFilters';
 import PropertyImageCarousel from '../components/PropertyImageCarousel';
 import Pagination from '../components/Pagination';
+import { useNavigate } from 'react-router-dom';
 
 function ListingsPage() {
     const [properties, setProperties] = useState([]);
@@ -25,7 +26,7 @@ function ListingsPage() {
 
             const offset = (currentPage - 1) * itemsPerPage;
             const params = { ...filters, limit: itemsPerPage, offset };
-            const data = await fetchProperties({ ...filters, limit: 20, offset: 0 });
+            const data = await fetchProperties(params);
 
             setProperties(data.results);
             setTotal(data.total);
@@ -91,8 +92,15 @@ function ListingsPage() {
 }
 
 function PropertyCard({ property }) {
+    const navigate = useNavigate();
+
+    const handleClick = () => {
+        navigate(`/property/${property.L_ListingID}`);
+    };
+    
     return (
-        <div className="property-card">
+        <div className="property-card" onClick={handleClick} role="button" tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}>
             <div className="property-image">
                 <PropertyImageCarousel photos={property.L_Photos} address={property.L_Address} />
             </div>
