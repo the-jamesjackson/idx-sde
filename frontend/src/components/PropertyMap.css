@@ -1,0 +1,42 @@
+.property-map-wrapper {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.property-map-iframe {
+  width: 100%;
+  height: 350px;
+  border: none;
+  display: block;
+}
+
+.map-directions-link {
+  display: block;
+  padding: 10px 14px;
+  background: #f9f9f9;
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 14px;
+  border-top: 1px solid #ddd;
+  text-align: right;
+}
+
+.map-directions-link:hover {
+  background: #f0f0f0;
+  text-decoration: underline;
+}
+
+.map-no-key {
+  padding: 20px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  color: #5d4037;
+  font-size: 14px;
+}
+
+.map-no-key p {
+  margin: 4px 0;
+}
