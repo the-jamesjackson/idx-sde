@@ -18,6 +18,9 @@ app.use((req, res, next) => {
 const propertiesRouter = require('./routes/properties');
 app.use('/api/properties', propertiesRouter);
 
+const naturalSearchRouter = require('./routes/naturalSearch');
+app.use('/api/search/natural', naturalSearchRouter);
+
 app.get('/api/health', async (req, res) => {
     try {
         await pool.query('SELECT 1');
