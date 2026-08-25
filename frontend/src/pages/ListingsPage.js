@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { fetchProperties } from '../api/client';
 import './ListingsPage.css';
 import PropertyFilters from '../components/PropertyFilters';
-import PropertyImageCarousel from '../components/PropertyImageCarousel';
+import PropertyCard from '../components/PropertyCard';
 import Pagination from '../components/Pagination';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 function ListingsPage() {
     const [properties, setProperties] = useState([]);
@@ -55,6 +55,13 @@ function ListingsPage() {
 
             <PropertyFilters onSearch={handleSearch} />
 
+            <Link to="/search/natural" className="natural-search-link">
+                <span className="natural-search-title">Try natural language search</span>
+                <span className="natural-search-subtitle">
+                    Describe what you're looking for in plain English
+                </span>
+            </Link>
+
             <p className="results-summary">
                 Showing {((currentPage - 1) * itemsPerPage) + 1}-
                 {Math.min(currentPage * itemsPerPage, total)} of {total.toLocaleString()} properties
@@ -87,41 +94,6 @@ function ListingsPage() {
                     onPageChange={handlePageChange}
                 />
             )}
-        </div>
-    );
-}
-
-function PropertyCard({ property }) {
-    const navigate = useNavigate();
-
-    const handleClick = () => {
-        navigate(`/property/${property.L_ListingID}`);
-    };
-    
-    return (
-        <div className="property-card" onClick={handleClick} role="button" tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}>
-            <div className="property-image">
-                <PropertyImageCarousel photos={property.L_Photos} address={property.L_Address} />
-            </div>
-
-            <div className="property-info">
-                <div className="price">${property.L_SystemPrice?.toLocaleString()}</div>
-                <div className="address">{property.L_Address}</div>
-                <div className="city">{property.L_City}, {property.L_State}</div>
-
-                <div className="property-details">
-                    <span>{property.L_Keyword2} beds</span>
-                    <span>•</span>
-                    <span>{property.LM_Dec_3} baths</span>
-                    {property.LM_Int2_3 && (
-                        <>
-                            <span>•</span>
-                            <span>{property.LM_Int2_3.toLocaleString()} sqft</span>
-                        </>
-                    )}
-                </div>
-            </div>
         </div>
     );
 }
