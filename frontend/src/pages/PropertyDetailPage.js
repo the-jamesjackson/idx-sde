@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { fetchPropertyDetail, fetchOpenHouses } from '../api/client';
 import PropertyImageGallery from '../components/PropertyImageGallery';
 import PropertyMap from '../components/PropertyMap';
+import { formatPrice } from '../utils/formatting';
 import './PropertyDetailPage.css';
 
 function formatEnumLabel(value) {
@@ -67,7 +68,7 @@ function PropertyDetailPage() {
             </button>
 
             <div className="property-header">
-                <h1>${property.L_SystemPrice?.toLocaleString()}</h1>
+                <h1>{formatPrice(property.L_SystemPrice)}</h1>
                 <p className="property-address">{property.L_Address}</p>
                 <p className="property-location">
                     {property.L_City}, {property.L_State} {property.L_Zip}

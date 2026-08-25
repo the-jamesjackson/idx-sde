@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import PropertyCard from '../components/PropertyCard';
+import { formatCity } from '../utils/formatting';
 import '../pages/ListingsPage.css';
 import './NaturalSearchPage.css';
 
@@ -60,8 +61,7 @@ function NaturalSearchPage() {
         let sentence = parts.length > 0 ? parts.join(', ') + ' homes' : 'Homes';
 
         if (filters.city) {
-            const displayCity = filters.city.replace(/\b\w/g, c => c.toUpperCase());
-            sentence += ` in ${displayCity}`;
+            sentence += ` in ${formatCity(filters.city)}`;
         }
         if (filters.zipcode) {
             sentence += ` (${filters.zipcode})`;
