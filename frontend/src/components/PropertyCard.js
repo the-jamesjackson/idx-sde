@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import PropertyImageCarousel from './PropertyImageCarousel';
+import { formatPrice, formatCity } from '../utils/formatting';
 import './PropertyCard.css';
 
 function PropertyCard({ property }) {
@@ -17,9 +19,9 @@ function PropertyCard({ property }) {
             </div>
 
             <div className="property-info">
-                <div className="price">${property.L_SystemPrice?.toLocaleString()}</div>
+                <div className="price">{formatPrice(property.L_SystemPrice)}</div>
                 <div className="address">{property.L_Address}</div>
-                <div className="city">{property.L_City}, {property.L_State}</div>
+                <div className="city">{formatCity(property.L_City)}, {property.L_State}</div>
 
                 <div className="property-details">
                     <span>{property.L_Keyword2} beds</span>
@@ -32,5 +34,19 @@ function PropertyCard({ property }) {
         </div>
     );
 }
+
+PropertyCard.propTypes = {
+    property: PropTypes.shape({
+        L_ListingID: PropTypes.string.isRequired,
+        L_Address: PropTypes.string,
+        L_City: PropTypes.string,
+        L_State: PropTypes.string,
+        L_SystemPrice: PropTypes.number,
+        L_Keyword2: PropTypes.number,
+        LM_Dec_3: PropTypes.string,
+        LM_Int2_3: PropTypes.number,
+        L_Photos: PropTypes.string,
+    }).isRequired,
+};
 
 export default PropertyCard;
