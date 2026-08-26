@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchProperties } from '../api/client';
 import './ListingsPage.css';
 import PropertyFilters from '../components/PropertyFilters';
@@ -15,11 +15,7 @@ function ListingsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(20);
 
-    useEffect(() => {
-        loadProperties();
-    }, [filters, currentPage]);
-
-    async function loadProperties() {
+    const loadProperties = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -35,7 +31,11 @@ function ListingsPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [filters, currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        loadProperties();
+    }, [loadProperties]);
 
     const handleSearch = (newFilters) => {
         setFilters(newFilters);

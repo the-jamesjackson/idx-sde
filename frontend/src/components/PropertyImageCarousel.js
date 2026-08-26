@@ -35,7 +35,7 @@ function PropertyImageCarousel({ photos, address }) {
       ) : (
         <img
           src={photoList[currentIndex]}
-          alt={`${address} photo ${currentIndex + 1}`}
+          alt={`${address}, view ${currentIndex + 1}`}
           className="carousel-img"
           referrerPolicy="no-referrer"
           onError={() => setFailed((f) => ({ ...f, [currentIndex]: true }))}
