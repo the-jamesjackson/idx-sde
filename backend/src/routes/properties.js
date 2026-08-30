@@ -80,9 +80,18 @@ router.get('/:id', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 20;
-        const offset = parseInt(req.query.offset) || 0;
-        const { city, zipcode, minPrice, maxPrice, beds, baths } = req.query;
+       const { limit: rawLimit, offset: rawOffset, city, zipcode, minPrice, maxPrice, beds, baths } = req.query;
+
+        if (rawLimit !== undefined && isNaN(rawLimit)) {
+            return res.status(400).json({ error: 'limit must be a number' });
+        }
+        if (rawOffset !== undefined && isNaN(rawOffset)) {
+            return res.status(400).json({ error: 'offset must be a number' });
+        }
+
+        const limit = rawLimit !== undefined ? parseInt(rawLimit) : 20;
+        const offset = rawOffset !== undefined ? parseInt(rawOffset) : 0;
+
         const conditions = [];
         const values = [];
         if (city) {
