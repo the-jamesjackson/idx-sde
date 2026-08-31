@@ -71,4 +71,35 @@ describe('Pagination', () => {
 
         expect(container).toBeEmptyDOMElement();
     });
+
+    test('shows ellipsis and end page when current page is near the start', () => {
+        render(<Pagination currentPage={2} totalPages={20} onPageChange={jest.fn()} />);
+
+        expect(screen.getByText('1')).toBeInTheDocument();
+        expect(screen.getByText('5')).toBeInTheDocument();
+        expect(screen.getByText('20')).toBeInTheDocument();
+        expect(screen.getByText('...')).toBeInTheDocument();
+        expect(screen.queryByText('6')).not.toBeInTheDocument();
+    });
+
+    test('shows ellipsis and start page when current page is near the end', () => {
+        render(<Pagination currentPage={18} totalPages={20} onPageChange={jest.fn()} />);
+
+        expect(screen.getByText('1')).toBeInTheDocument();
+        expect(screen.getByText('16')).toBeInTheDocument();
+        expect(screen.getByText('20')).toBeInTheDocument();
+        expect(screen.getByText('...')).toBeInTheDocument();
+        expect(screen.queryByText('15')).not.toBeInTheDocument();
+    });
+
+    test('shows two ellipses when current page is in the middle', () => {
+        render(<Pagination currentPage={10} totalPages={20} onPageChange={jest.fn()} />);
+
+        expect(screen.getByText('1')).toBeInTheDocument();
+        expect(screen.getByText('9')).toBeInTheDocument();
+        expect(screen.getByText('10')).toBeInTheDocument();
+        expect(screen.getByText('11')).toBeInTheDocument();
+        expect(screen.getByText('20')).toBeInTheDocument();
+        expect(screen.getAllByText('...')).toHaveLength(2);
+    });
 });
