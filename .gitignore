@@ -1,5 +1,5 @@
 *.sql
 .DS_Store
 node_modules/
-.envcoverage/
+.env
 coverage/
