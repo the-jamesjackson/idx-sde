@@ -1,4 +1,9 @@
-*.sql
+# Database dumps — too large for git. Anchored to the root so schema and
+# migration .sql files stay tracked.
+/california_sold.sql
+/rets_openhouse.sql
+/rets_property.sql
+
 .DS_Store
 node_modules/
 .env

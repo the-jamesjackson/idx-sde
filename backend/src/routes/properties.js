@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/mysql');
+const { buildCityCondition } = require('../db/cities');
 
 function validateListingId(id) {
     if (!id || id.trim() === '') {
@@ -94,10 +95,6 @@ router.get('/', async (req, res) => {
 
         const conditions = [];
         const values = [];
-        if (city) {
-            conditions.push('LOWER(TRIM(L_City)) = LOWER(TRIM(?))');
-            values.push(city);
-        }
         if (zipcode) {
             conditions.push('L_Zip = ?');
             values.push(zipcode);
@@ -136,6 +133,20 @@ router.get('/', async (req, res) => {
         }
         if (offset < 0) {
             return res.status(400).json({ error: 'offset cannot be negative' });
+        }
+
+        // Resolved after the validations above so a bad limit or price still returns
+        // 400 rather than being short-circuited by an unknown city.
+        if (city) {
+            const cityCondition = await buildCityCondition(city);
+
+            // No listing uses this city name, so the query can only come back empty.
+            if (cityCondition === null) {
+                return res.json({ total: 0, limit, offset, results: [] });
+            }
+
+            conditions.push(cityCondition.sql);
+            values.push(...cityCondition.values);
         }
 
         const whereClause = conditions.length > 0

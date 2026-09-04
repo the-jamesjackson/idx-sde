@@ -6,7 +6,12 @@ jest.mock('../db/mysql', () => ({
     query: jest.fn()
 }));
 
+jest.mock('../db/cities', () => ({
+    buildCityCondition: jest.fn()
+}));
+
 const pool = require('../db/mysql');
+const { buildCityCondition } = require('../db/cities');
 
 const app = express();
 app.use(express.json());
@@ -15,6 +20,12 @@ app.use('/api/properties', propertiesRouter);
 describe('Properties API', () => {
     beforeEach(() => {
         pool.query.mockClear();
+
+        buildCityCondition.mockReset();
+        buildCityCondition.mockImplementation(async (name) => ({
+            sql: 'L_City IN (?)',
+            values: [name]
+        }));
     });
 
     describe('GET /api/properties', () => {
@@ -53,6 +64,27 @@ describe('Properties API', () => {
                 expect.stringContaining('WHERE'),
                 expect.arrayContaining(['Portland'])
             );
+        });
+
+        test('returns an empty page for a city with no listings', async () => {
+            buildCityCondition.mockResolvedValueOnce(null);
+
+            const response = await request(app)
+                .get('/api/properties?city=Nowhere')
+                .expect(200);
+
+            expect(response.body).toEqual({ total: 0, limit: 20, offset: 0, results: [] });
+            expect(pool.query).not.toHaveBeenCalled();
+        });
+
+        test('still validates other params when the city is unknown', async () => {
+            buildCityCondition.mockResolvedValueOnce(null);
+
+            const response = await request(app)
+                .get('/api/properties?city=Nowhere&limit=500')
+                .expect(400);
+
+            expect(response.body.error).toContain('limit');
         });
 
         test('filters by price range', async () => {
