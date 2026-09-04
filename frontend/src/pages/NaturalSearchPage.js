@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import PropertyCard from '../components/PropertyCard';
 import { formatCity } from '../utils/formatting';
 import '../pages/ListingsPage.css';
@@ -10,6 +11,7 @@ function NaturalSearchPage() {
     const [results, setResults] = useState([]);
     const [interpretedFilters, setInterpretedFilters] = useState(null);
     const [message, setMessage] = useState('');
+    const [notice, setNotice] = useState('');
     const [error, setError] = useState('');
 
     const handleSearch = async () => {
@@ -18,6 +20,7 @@ function NaturalSearchPage() {
         setLoading(true);
         setError('');
         setMessage('');
+        setNotice('');
 
         try {
             const response = await fetch('/api/search/natural', {
@@ -31,6 +34,7 @@ function NaturalSearchPage() {
                 setError(errData.error || 'Something went wrong with your search.');
                 setResults([]);
                 setInterpretedFilters(null);
+                setNotice('');
                 return;
             }
 
@@ -38,6 +42,7 @@ function NaturalSearchPage() {
             setResults(data.results || []);
             setInterpretedFilters(data.interpretedFilters || {});
             setMessage(data.message || '');
+            setNotice(data.notice || '');
         } catch (err) {
             setError('Failed to reach the search service. Please try again.');
             setResults([]);
@@ -88,6 +93,8 @@ function NaturalSearchPage() {
 
     return (
         <div className="natural-search-page">
+            <Link to="/" className="btn-back">Back to Listings</Link>
+
             <h1>Search by Description</h1>
             <p>Try something like "3 bed 2 bath house in Sacramento under $500k built after 2000"</p>
 
@@ -105,6 +112,8 @@ function NaturalSearchPage() {
             </div>
 
             {error && <p className="search-error">{error}</p>}
+
+            {notice && <p className="search-notice">{notice}</p>}
 
             {interpretedFilters && formatFilters(interpretedFilters) && (
                 <p className="interpreted-filters">
