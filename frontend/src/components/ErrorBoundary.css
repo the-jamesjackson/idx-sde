@@ -1,20 +1,33 @@
 .error-boundary {
+    max-width: 560px;
+    margin: 80px auto;
     text-align: center;
-    padding: 60px 20px;
-    color: #666;
+    padding: 40px 24px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
 }
 
 .error-boundary h2 {
-    color: #d32f2f;
-    margin-bottom: 8px;
+    color: var(--danger);
+    margin: 0 0 8px;
 }
 
 .error-boundary button {
-    margin-top: 16px;
-    padding: 10px 20px;
-    background-color: #1976d2;
+    margin-top: 18px;
+    padding: 10px 22px;
+    font-weight: 600;
+    background-color: var(--brand);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
+    box-shadow: 0 1px 2px rgba(16, 26, 43, 0.12), 0 6px 14px -8px rgba(22, 104, 196, 0.7);
+    transition: background-color var(--fast);
+}
+
+.error-boundary button:hover {
+    background-color: var(--brand-strong);
 }

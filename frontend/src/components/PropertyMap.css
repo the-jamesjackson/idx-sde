@@ -1,8 +1,10 @@
 .property-map-wrapper {
   width: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
-  border: 1px solid #ddd;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .property-map-iframe {
@@ -14,26 +16,28 @@
 
 .map-directions-link {
   display: block;
-  padding: 10px 14px;
-  background: #f9f9f9;
-  color: #1976d2;
+  padding: 11px 16px;
+  background: var(--surface-sunken);
+  color: var(--brand);
   text-decoration: none;
-  font-size: 14px;
-  border-top: 1px solid #ddd;
+  font-size: 13px;
+  font-weight: 500;
+  border-top: 1px solid var(--line);
   text-align: right;
+  transition: background-color var(--fast), color var(--fast);
 }
 
 .map-directions-link:hover {
-  background: #f0f0f0;
-  text-decoration: underline;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
 }
 
 .map-no-key {
   padding: 20px;
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 8px;
-  color: #5d4037;
+  background: #fffaf0;
+  border: 1px solid #f5deb8;
+  border-radius: var(--radius);
+  color: #6b5330;
   font-size: 14px;
 }
 
