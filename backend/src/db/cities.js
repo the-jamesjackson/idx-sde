@@ -6,6 +6,8 @@ const CACHE_TTL_MS = 60 * 60 * 1000;
 let cache = null;
 let inFlight = null;
 
+const AMBIGUOUS = Symbol('ambiguous');
+
 // Collapses the spelling differences that shouldn't decide whether a search matches:
 // case, surrounding and internal whitespace, punctuation, and the abbreviations MLS
 // data mixes freely ("St. Helena" / "Saint Helena", "Mt. Shasta" / "Mount Shasta").
@@ -31,6 +33,7 @@ async function loadCityIndex() {
     );
 
     const byKey = new Map();
+    const bySpacelessKey = new Map();
 
     for (const row of rows) {
         const stored = row.L_City;
@@ -43,9 +46,16 @@ async function loadCityIndex() {
         } else {
             byKey.set(key, [stored]);
         }
+
+        const spaceless = key.replace(/ /g, '');
+        const claimed = bySpacelessKey.get(spaceless);
+        bySpacelessKey.set(
+            spaceless,
+            claimed !== undefined && claimed !== key ? AMBIGUOUS : key
+        );
     }
 
-    return { loadedAt: Date.now(), byKey };
+    return { loadedAt: Date.now(), byKey, bySpacelessKey };
 }
 
 // Concurrent callers during a cold start share one query rather than each firing
@@ -83,8 +93,17 @@ async function resolveCity(name) {
     const key = normalizeCityKey(name);
     if (!key) return null;
 
-    const { byKey } = await getCityIndex();
-    return byKey.get(key) || null;
+    const { byKey, bySpacelessKey } = await getCityIndex();
+
+    const exact = byKey.get(key);
+    if (exact) return exact;
+
+    const collapsed = bySpacelessKey.get(key.replace(/ /g, ''));
+    if (typeof collapsed === 'string') {
+        return byKey.get(collapsed) || null;
+    }
+
+    return null;
 }
 
 // Builds the SQL for a city filter. Returns null when the city isn't in the dataset,

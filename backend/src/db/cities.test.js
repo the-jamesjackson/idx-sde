@@ -78,6 +78,32 @@ describe('resolveCity', () => {
         expect(await resolveCity('Austin')).toBeNull();
     });
 
+    test('matches across a missing space', async () => {
+        mockStoredCities('Silver Lake');
+
+        expect(await resolveCity('silverlake')).toEqual(['Silver Lake']);
+    });
+
+    test('matches across an added space', async () => {
+        mockStoredCities('Silverado');
+
+        expect(await resolveCity('Silver ado')).toEqual(['Silverado']);
+    });
+
+    test('prefers an exact match over a spaceless one', async () => {
+        mockStoredCities('Silverado', 'Silver Ado');
+
+        expect(await resolveCity('Silverado')).toEqual(['Silverado']);
+    });
+
+    test('leaves an ambiguous spaceless form unresolved', async () => {
+        mockStoredCities('La Habra', 'Lahabra');
+
+        expect(await resolveCity('la habra')).toEqual(['La Habra']);
+        expect(await resolveCity('LaHabra')).toEqual(['Lahabra']);
+        expect(await resolveCity('l a h a b r a')).toBeNull();
+    });
+
     test('returns null for an unusable name without loading the list', async () => {
         expect(await resolveCity('  ')).toBeNull();
         expect(pool.query).not.toHaveBeenCalled();
