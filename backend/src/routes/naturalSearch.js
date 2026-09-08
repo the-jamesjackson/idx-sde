@@ -9,7 +9,7 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT = `You extract structured property-search filters from a natural language query.
 
-Return ONLY a JSON object using these fields. Omit any field you cannot confidently extract — never include a field you had to guess at.
+Return ONLY a JSON object using these fields. Set a field to null if you cannot confidently extract it — never guess at a value.
 {
   "city": string,          // city name, exactly as the user typed it
   "zipcode": string,       // 5-digit US ZIP code
@@ -22,7 +22,7 @@ Return ONLY a JSON object using these fields. Omit any field you cannot confiden
 }
 
 Output format:
-- If the query contains no extractable filters, return an empty object {}.
+- If the query contains no extractable filters, set every field to null.
 - Never invent values the query doesn't support.
 
 Number normalization — always convert prices to whole dollars:
@@ -71,22 +71,27 @@ Query: "homes in the bay area under 1m"
 Query: "3 bed silverlake"
 {"city":"silverlake","beds":3}`;
 
-// JSON schema passed to structured outputs so Claude's response is always schema-valid JSON.
-// Fields are optional (empty `required`), so the model omits anything it can't extract.
-// Range/format checks (5-digit zip, non-negative prices, etc.) stay in validateExtractedFilters.
+const FILTER_FIELDS = {
+    city: 'string',
+    zipcode: 'string',
+    minPrice: 'number',
+    maxPrice: 'number',
+    beds: 'integer',
+    baths: 'number',
+    minYearBuilt: 'integer',
+    maxYearBuilt: 'integer'
+};
+
+// Every field is required and nullable rather than optional. With all eight optional,
+// the model reliably wrote extracted prices into maxYearBuilt — "3 bed in LA under 800k"
+// came back as {"city":"Los Angeles","beds":3,"maxYearBuilt":0}. Requiring the keys and
+// letting them be null fixes it. Value checks stay in validateExtractedFilters.
 const FILTER_SCHEMA = {
     type: 'object',
-    properties: {
-        city: { type: 'string' },
-        zipcode: { type: 'string' },
-        minPrice: { type: 'number' },
-        maxPrice: { type: 'number' },
-        beds: { type: 'integer' },
-        baths: { type: 'number' },
-        minYearBuilt: { type: 'integer' },
-        maxYearBuilt: { type: 'integer' }
-    },
-    required: [],
+    properties: Object.fromEntries(
+        Object.entries(FILTER_FIELDS).map(([name, type]) => [name, { type: [type, 'null'] }])
+    ),
+    required: Object.keys(FILTER_FIELDS),
     additionalProperties: false
 };
 
