@@ -25,7 +25,8 @@ const propertiesRouter = require('./routes/properties');
 app.use('/api/properties', propertiesRouter);
 
 const naturalSearchRouter = require('./routes/naturalSearch');
-app.use('/api/search/natural', naturalSearchRouter);
+const { createNaturalSearchLimiter } = require('./middleware/rateLimit');
+app.use('/api/search/natural', createNaturalSearchLimiter(), naturalSearchRouter);
 
 app.get('/api/health', async (req, res) => {
     try {
