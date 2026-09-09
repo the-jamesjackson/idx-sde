@@ -9,7 +9,8 @@ A full-stack property search application built with React, Node.js/Express, and 
 - Property detail pages with image gallery, lightbox, and Google Maps location
 - Image carousel on listing cards
 - Open house schedules
-- **AI-powered natural language search** — describe what you're looking for in plain English (e.g. "3 bed homes in Portland under $500k") and Claude translates it into structured filters
+- **AI-powered natural language search** — describe what you're looking for in plain English (e.g. "3 bed homes in Sacramento under $500k") and Claude translates it into structured filters
+- **City resolution** — abbreviations ("LA"), misspellings ("sacremento"), and run-together names ("silverlake") are matched against the cities actually present in the data; anything left over is resolved by Claude, and any substitution is shown to the user rather than made silently
 
 ## Prerequisites
 
@@ -102,6 +103,21 @@ cd frontend
 npm test
 ```
 
+### Live prompt evals
+
+`backend/src/routes/naturalSearch.test.js` also contains evals that call the real
+Claude API to check the extraction prompt behaves — abbreviation expansion, misspelling
+correction, and passing through locations it can't confidently normalize. They are
+skipped unless `ANTHROPIC_API_KEY` is set, since they make billable calls:
+
+```bash
+cd backend
+ANTHROPIC_API_KEY=$(grep '^ANTHROPIC_API_KEY=' .env | cut -d= -f2-) npx jest naturalSearch
+```
+
+Everything else is mocked, so these are the only tests that exercise the seam between
+the prompt and the model. Worth running after any prompt or schema change.
+
 ## Linting
 
 ```bash
@@ -116,12 +132,16 @@ idx-internship/
 ├── backend/
 │   ├── src/
 │   │   ├── db/
-│   │   │   └── mysql.js
+│   │   │   ├── mysql.js
+│   │   │   └── cities.js        # resolves city names to stored spellings
+│   │   ├── middleware/
+│   │   │   └── rateLimit.js
 │   │   ├── routes/
 │   │   │   ├── properties.js
-│   │   │   ├── properties.test.js
 │   │   │   └── naturalSearch.js
-│   │   └── index.js
+│   │   ├── services/
+│   │   │   └── cityResolver.js  # Claude fallback for unrecognized cities
+│   │   └── index.js             # tests are colocated as *.test.js
 │   ├── .env
 │   └── package.json
 ├── frontend/
@@ -134,6 +154,7 @@ idx-internship/
 │   └── package.json
 ├── rets_property.sql
 ├── rets_openhouse.sql
+├── california_sold.sql
 └── README.md
 ```
 
@@ -156,7 +177,7 @@ Query parameters:
 Example:
 
 ```bash
-GET /api/properties?city=Portland&minPrice=300000&beds=3
+GET /api/properties?city=Sacramento&minPrice=300000&beds=3
 ```
 
 ### GET /api/properties/:id
@@ -174,8 +195,27 @@ Accepts a plain-English query and uses Claude to interpret it into structured fi
 Request body:
 
 ```json
-{ "query": "3 bedroom homes in Portland under $500k" }
+{ "query": "3 bedroom homes in Sacramento under $500k" }
 ```
+
+Response:
+
+```json
+{
+  "total": 42,
+  "results": [],
+  "interpretedFilters": { "city": "Sacramento", "beds": 3, "maxPrice": 500000 },
+  "notice": "silverlake is part of Los Angeles — showing Los Angeles listings.",
+  "message": "No listings in Sacramento match the rest of your criteria."
+}
+```
+
+`interpretedFilters` reports what the query was understood to mean. `notice` appears
+only when the requested city was substituted for a different one. `message` appears
+only when there are no results, and explains which part of the query came up empty.
+
+Rate limited to 20 requests per 5 minutes per IP; past that the endpoint returns `429`
+without calling Claude.
 
 ### GET /api/health
 
@@ -198,6 +238,15 @@ Health check that verifies database connectivity.
 - Browser back button works as expected
 - Easy to add more pages in the future
 
+### Why resolve city names against the database?
+- The `L_City` column is matched exactly, so an unrecognized name silently returns zero results — indistinguishable from "no listings match"
+- City names are loaded once and cached, letting abbreviations, punctuation, and misplaced spaces resolve locally without an API call
+- Matching against stored spellings keeps the column bare in SQL (`L_City IN (...)` rather than `LOWER(TRIM(L_City)) = ...`), so the existing index on the column applies
+
+### Why rate limit natural search?
+- Every search costs a Claude API call, so an uncapped endpoint is an uncapped bill
+- The limit sits in front of the route, so rejected requests never reach the model
+
 ### Why an LLM for natural language search?
 - Maps free-form user intent onto the same structured filters the standard search already supports, rather than building a brittle keyword parser
 - Runs server-side so the API key is never exposed to the browser
@@ -205,6 +254,8 @@ Health check that verifies database connectivity.
 ## Known Issues / Future Improvements
 
 - Some listing photo URLs point to expired media (sold listings) and 404; broken images fall back to an "Image unavailable" placeholder
+- Rate limiting keys on `req.ip`. Behind a reverse proxy this is the proxy's address, making the limit global rather than per-user — set `trust proxy` in `src/index.js` once the number of proxies is known, since trusting `X-Forwarded-For` blindly lets clients bypass the limit
+- Rate limit counters are in-process, so they reset on restart and are not shared between instances
 - Implement user authentication
 - Add saved searches and favorites (a `hooks/` folder is reserved for this)
 - Further mobile responsive design improvements
@@ -218,6 +269,11 @@ Health check that verifies database connectivity.
 
 **Natural language search returns an error:**
 - Ensure `ANTHROPIC_API_KEY` is set in `backend/.env` and the backend was restarted
+
+**Search says "We don't have any listings in X":**
+- The location isn't in the dataset and Claude couldn't map it to one that is. This is
+  a real answer, not a failure — the data is California only, so out-of-state cities and
+  ambiguous abbreviations are reported rather than guessed at
 
 **Map shows "not authorized" or is blank:**
 - Set `REACT_APP_GOOGLE_MAPS_API_KEY` in `frontend/.env`

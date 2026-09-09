@@ -3,7 +3,6 @@ const { rateLimit, MINUTE } = require('express-rate-limit');
 const WINDOW_MS = 5 * MINUTE;
 const MAX_SEARCHES = 20;
 
-// A factory rather than a shared instance, so each limiter owns its counter store.
 function createNaturalSearchLimiter(overrides = {}) {
     return rateLimit({
         windowMs: WINDOW_MS,
